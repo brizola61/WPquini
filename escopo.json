@@ -1,0 +1,7 @@
+{
+    "alvos": [
+        "htpp://localhost:8000/",
+        "htpps://wp.seudominio.com.br/",
+        "htpps://wp.seudominio.com.br/wp-admin"
+    ]
+}
