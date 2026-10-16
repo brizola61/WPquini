@@ -1,0 +1,69 @@
+name: wpquini-lab
+services:
+  db:
+    image: mariadb:11.4
+    mem_limit: 512m
+    cpus: 1.0
+    pids_limit: 256
+    environment:
+      MARIADB_ROOT_PASSWORD: root_lab_only_change_me
+      MARIADB_DATABASE: wordpress
+      MARIADB_USER: wp_lab
+      MARIADB_PASSWORD: lab_only_change_me
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"] 
+      interval: 5s
+      timeout: 5s
+      retries: 30 
+  wordpress:
+    build: . 
+    image: wpquini-wordpress:lab
+    mem_limit: 512m
+    cpus: 1.0
+    pids_limit: 256    
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:8080:8080"
+    enviroment:
+      WORDPRESS_DB_HOST: db:3306
+      WORDPRESS_DB_USER: wp_lab
+      WORDPRESS_DB_PASSWORD: lab_only_change_me
+      WORDPRESS_DB_NAME: wordpress 
+    volumes: 
+      - wp_data:/var/www/html 
+
+  scanner:
+    image: wpscanteam/wpscan:latest 
+    mem_limit: 768m
+    cpus: 1.0
+    pids_limit: 256  
+    profiles: ["tools"] 
+    
+    network_mode: "service:wordpress" 
+    volumes:
+      - ./relatorios:/reports
+      - scan_cache:/wpscan/.cache/wpscan/db
+    environment:
+      WPSCAN_API_TOKEN: ${WPSCAN_API_TOKEN} 
+  scanner_remoto:
+    image: wpscanteam/wpscan:latest 
+    mem_limit: 768m
+    cpus: 1.0
+    pids_limit: 256  
+    profiles: ["tools"] 
+    network_mode: "service:wordpress" 
+    volumes:
+      - ./relatorios:/reports
+      - scan_cache:/wpscan/.cache/wpscan/db
+    environment:
+      WPSCAN_API_TOKEN: ${WPSCAN_API_TOKEN} 
+
+volumes:
+  db_data:
+  wp_data:
+  scan_cache: 
+  
